@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Threadfound Radar Pro | Buy, Sell & Flip Tracker</title>
+  <meta name="description" content="A practical UK resale decision tool for checking buy prices, profit, risk, listing copy and flip history." />
+  <meta name="theme-color" content="#0b1117" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="#top"><span class="logo">£</span><span>Threadfound Radar Pro</span></a>
+      <div class="navlinks"><a href="#dashboard">Dashboard</a><a href="#checker">Checker</a><a href="#checklist">Checks</a><a href="#listing">Listing</a><a href="#flips">My flips</a><a href="#prices">Prices</a></div>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">Buy smarter, sell cleaner</p>
+        <h1>Check the deal before you buy it.</h1>
+        <p class="lead">Enter the item, grade, full buy cost and selling plan. The site scores the deal, locks risky buys behind checks, suggests negotiation prices, creates listing copy and saves your flip history.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#checker">Check a deal</a>
+          <a class="button" href="#dashboard">See what fits your budget</a>
+          <a class="button" href="#flips">Track flips</a>
+        </div>
+      </div>
+      <div class="panel card">
+        <p class="eyebrow">Bankroll mode</p>
+        <h2>What can you buy today?</h2>
+        <label>Money available (£)<input id="bankroll" type="number" min="0" step="1" inputmode="decimal" value="23"></label>
+        <p class="small" id="bankrollSummary">Add your budget to rank realistic targets.</p>
+        <div class="actions"><button class="tool-btn primary" id="refreshBankroll" type="button">Rank targets</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="dashboard">
+    <div class="wrap grid-2">
+      <div class="panel card">
+        <p class="eyebrow">Best targets for your budget</p>
+        <h2>Hunt list</h2>
+        <p class="muted">Closed by default so the page stays focused. Open it when you want the site to rank items that fit your current bankroll.</p>
+        <div class="actions"><button class="tool-btn primary" id="openHuntList" type="button">Open hunt list</button></div>
+        <p class="closed-note" id="huntListStatus">Hunt list closed.</p>
+        <div class="collapsible-body" id="huntListBody">
+          <div class="rank-list" id="bankrollList"></div>
+        </div>
+      </div>
+      <div class="panel card">
+        <p class="eyebrow">Quick flip ranking</p>
+        <h2>Best items in the whole guide</h2>
+        <p class="muted">Closed by default. Open it when you want to see the strongest guide items ranked by profit, confidence, risk and speed.</p>
+        <div class="actions"><button class="tool-btn primary" id="openQuickRank" type="button">Open best items</button></div>
+        <p class="closed-note" id="quickRankStatus">Best items closed.</p>
+        <div class="collapsible-body" id="quickRankBody">
+          <div class="rank-list" id="quickRankList"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="checker">
+    <div class="wrap grid-2">
+      <div class="panel card">
+        <p class="eyebrow">1. Buying check</p>
+        <h2>Should you buy it?</h2>
+        <div class="form-grid">
+          <label>Product<select id="product"></select></label>
+          <label>Grade<select id="gradeSelect"><option>Grade A</option><option selected>Grade B</option><option>Grade C</option></select></label>
+          <label>Item price (£)<input id="itemPrice" type="number" min="0" step="0.5" inputmode="decimal" placeholder="Example: 10"></label>
+          <label>Shipping + buyer protection (£)<input id="buyingCosts" type="number" min="0" step="0.5" inputmode="decimal" value="0"></label>
+        </div>
+        <div class="actions"><button class="tool-btn primary" id="loadGuide" type="button">Load guide numbers</button><button class="tool-btn" id="resetBuying" type="button">Reset buying costs</button></div>
+        <p class="small" id="guideNote"></p>
+        <div class="guide-trust soft">
+          <div><span class="small">Last checked</span><strong id="priceCheckedOut">6 June 2026</strong></div>
+          <div><span class="small">Confidence</span><strong id="priceConfidenceOut">High</strong></div>
+          <p class="small full" id="priceSourcesOut">Based on stored guide evidence.</p>
+          <p class="notice success full" id="priceFreshnessOut">Fresh guide.</p>
+        </div>
+      </div>
+
+      <div class="panel card result">
+        <div class="score-top">
+          <div>
+            <p class="eyebrow">Deal score</p>
+            <h3 class="decision maybe" id="buyVerdict">Enter your costs</h3>
+          </div>
+          <div class="score-ring" id="scoreRing"><div class="score-inner"><strong id="dealScoreOut">--</strong><span>out of 100</span></div></div>
+        </div>
+        <p class="explain" id="buyReason">This compares your full cost against the stored buy-in range, risk, confidence, checks and projected profit.</p>
+        <div class="stats">
+          <div class="stat"><span class="small">Total cost to you</span><strong id="totalCostOut">£0</strong></div>
+          <div class="stat"><span class="small">Recommended buy range</span><strong id="buyRangeOut">£0-£0</strong></div>
+          <div class="stat"><span class="small">Maximum buy-in</span><strong id="maxBuyOut">£0</strong></div>
+          <div class="stat"><span class="small">Projected resale</span><strong id="guideResaleOut">£0</strong></div>
+        </div>
+        <div class="meter" aria-hidden="true" id="buyMeterWrap"><span id="buyMeter"></span></div>
+        <p class="notice" id="riskNote">The risk note updates when you pick a product.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap grid-2 equal-cards">
+      <div class="panel card">
+        <p class="eyebrow">2. Selling plan</p>
+        <h2>What profit will you make?</h2>
+        <div class="form-grid">
+          <label>Total paid (£)<input id="totalPaid" type="number" min="0" step="0.5" inputmode="decimal"></label>
+          <label>Planned sell price (£)<input id="sellPrice" type="number" min="0" step="0.5" inputmode="decimal"></label>
+          <label>Selling platform<select id="platform"></select></label>
+          <label>Platform allowance (%)<input id="platformFee" type="number" min="0" max="40" step="0.5" value="0"></label>
+          <label>Postage / selling costs (£)<input id="sellingCosts" type="number" min="0" step="0.5" value="7"></label>
+          <label>Fixed selling cost (£)<input id="fixedFee" type="number" min="0" step="0.5" value="0"></label>
+        </div>
+        <div class="actions"><button class="tool-btn primary" id="useBuyTotal" type="button">Use buy total</button><button class="tool-btn" id="useGuideSell" type="button">Use guide sell price</button></div>
+      </div>
+
+      <div class="panel card result">
+        <p class="eyebrow">Sale verdict</p>
+        <h3 class="decision maybe" id="saleVerdict">Enter sell price</h3>
+        <div class="stats">
+          <div class="stat"><span class="small">Estimated profit</span><strong id="profitOut">£0</strong></div>
+          <div class="stat"><span class="small">Margin</span><strong id="marginOut">0%</strong></div>
+          <div class="stat"><span class="small">ROI</span><strong id="roiOut">0%</strong></div>
+          <div class="stat"><span class="small">Resale range</span><strong id="resaleRangeOut">£0-£0</strong></div>
+        </div>
+        <p class="explain" id="saleReason">This compares your sale plan against the guide resale range and your costs.</p>
+        <div class="chips"><span class="chip" id="openingOfferOut">Opening offer: £0</span><span class="chip" id="walkAwayOut">Walk-away: £0</span><span class="chip" id="listAtOut">List at: £0</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="checklist">
+    <div class="wrap grid-2">
+      <div class="panel card">
+        <p class="eyebrow">3. Check before paying</p>
+        <h2 id="checkTitle">Personalised checklist</h2>
+        <p class="muted" id="checkIntro">Pick an item and use this before handing over cash.</p>
+        <div class="checklist" id="checklistBox"></div>
+        <div class="actions"><button class="tool-btn" id="resetChecks" type="button">Untick all</button><span class="small" id="checkProgress">0 checks completed</span></div>
+      </div>
+      <div class="panel card proof-card">
+        <p class="eyebrow">Proof lock</p>
+        <h2 id="proofTitle">Checks protect your profit</h2>
+        <p class="explain" id="proofLockOut">Riskier items need required checks ticked before the score can become a strong buy.</p>
+        <div class="stats">
+          <div class="stat"><span class="small">Required checks done</span><strong id="requiredDoneOut">0/0</strong></div>
+          <div class="stat"><span class="small">Score cap until checked</span><strong id="scoreCapOut">None</strong></div>
+        </div>
+        <p class="notice" id="proofAdvice">Phones, AirPods and watches are where this matters most.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="listing">
+    <div class="wrap grid-2 equal-cards">
+      <div class="panel card negotiation-card">
+        <p class="eyebrow">4. Negotiation helper</p>
+        <h2>What should you offer?</h2>
+        <div class="stats">
+          <div class="stat"><span class="small">Opening offer</span><strong id="negOpeningOut">£0</strong></div>
+          <div class="stat"><span class="small">Fair buy zone</span><strong id="negFairOut">£0-£0</strong></div>
+          <div class="stat"><span class="small">Walk-away price</span><strong id="negWalkAwayOut">£0</strong></div>
+          <div class="stat"><span class="small">Target list price</span><strong id="negListOut">£0</strong></div>
+        </div>
+        <label class="full">Message to send<textarea id="negoMessage" readonly></textarea></label>
+        <div class="actions"><button class="tool-btn primary" id="copyNego" type="button">Copy message</button></div>
+      </div>
+
+      <div class="panel card listing-card">
+        <p class="eyebrow">5. Listing helper</p>
+        <h2>Ready-to-use listing</h2>
+        <div class="copy-row"><label>Title<input id="listingTitle" readonly></label><button class="tool-btn" id="copyTitle" type="button">Copy</button></div>
+        <div class="copy-row description-row" style="margin-top:12px"><label>Description<textarea id="listingDescription" readonly></textarea></label><button class="tool-btn" id="copyDesc" type="button">Copy</button></div>
+        <div class="photo-checklist" id="photoChecklistOut"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="flips">
+    <div class="wrap">
+      <div class="panel card">
+        <p class="eyebrow">6. My flips</p>
+        <h2>Save deals and learn what works</h2>
+        <div class="form-grid">
+          <label>Status<select id="dealStatus"><option>Watching</option><option>Bought</option><option>Listed</option><option>Sold</option></select></label>
+          <label>Where from / planned selling place<input id="dealSource" placeholder="Vinted, Facebook, eBay, local..."></label>
+          <label>Date<input id="dealDate" type="date"></label>
+          <label>Notes<input id="dealNotes" placeholder="Battery, condition, bundle, buyer notes..."></label>
+          <label>Actual sale price (£)<input id="actualSalePrice" type="number" min="0" step="0.5" inputmode="decimal" placeholder="Optional after it sells"></label>
+          <label>Actual selling costs (£)<input id="actualSellingCosts" type="number" min="0" step="0.5" inputmode="decimal" placeholder="Postage, fees, packaging..."></label>
+          <label>Sold platform<input id="actualPlatform" placeholder="Vinted, eBay, Facebook..."></label>
+          <label>Days to sell<input id="daysToSell" type="number" min="0" step="1" inputmode="numeric" placeholder="Optional"></label>
+        </div>
+        <div class="actions"><button class="tool-btn primary" id="saveDeal" type="button">Save current deal</button><button class="tool-btn" id="exportDeals" type="button">Export CSV</button><button class="tool-btn danger" id="clearDeals" type="button">Clear saved flips</button></div>
+        <div class="grid-4" style="margin-top:16px">
+          <div class="stat"><span class="small">Deals saved</span><strong id="savedCountOut">0</strong></div>
+          <div class="stat"><span class="small">Total spent</span><strong id="savedSpentOut">£0</strong></div>
+          <div class="stat"><span class="small">Projected profit</span><strong id="savedProfitOut">£0</strong></div>
+          <div class="stat"><span class="small">Actual profit</span><strong id="savedActualProfitOut">£0</strong></div>
+          <div class="stat"><span class="small">Actual vs projected</span><strong id="savedAccuracyOut">No actuals yet</strong></div>
+          <div class="stat"><span class="small">Average days to sell</span><strong id="savedAvgDaysOut">No sales yet</strong></div>
+        </div>
+        <div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Date</th><th>Item</th><th>Status</th><th>Cost</th><th>Planned sell</th><th>Projected profit</th><th>Actual sell</th><th>Actual profit</th><th>Days</th><th>Score</th><th>Source / notes</th><th></th></tr></thead><tbody id="dealsBody"></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="prices">
+    <div class="wrap">
+      <div class="price-gate panel">
+        <div>
+          <p class="eyebrow">Optional reference</p>
+          <h2>Full price table</h2>
+          <p class="muted">Closed by default so the page stays focused. Open it only when you want to search the stored guide data.</p>
+        </div>
+        <button class="tool-btn primary" id="openTable" type="button">Open price table</button>
+      </div>
+      <div class="table-tools" id="tableTools">
+        <div class="controls">
+          <label>Search<input id="tableSearch" placeholder="Search product or checks..."></label>
+          <label>Grade<select id="tableGrade"><option value="">All grades</option><option>Grade A</option><option>Grade B</option><option>Grade C</option></select></label>
+          <label>Risk<select id="tableRisk"><option value="">All risk</option><option>Low</option><option>Medium</option><option>High</option></select></label>
+          <button class="tool-btn" id="closeTable" type="button">Close</button>
+        </div>
+        <p class="small" id="tableStatus">Table closed.</p>
+        <div class="table-wrap"><table><thead><tr><th>Product</th><th>Grade</th><th>Resale</th><th>Buy range</th><th>Max</th><th>Confidence</th><th>Risk</th><th>Checks</th></tr></thead><tbody id="tableBody"></tbody></table></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap"><strong>Threadfound Radar Pro</strong><p class="small">Guide prices are a starting point. Test the exact item, check recent sold prices, and stay strict on your walk-away price.</p></div>
+</footer>
+<nav class="bottom-actions" aria-label="Quick actions">
+  <a href="#checker">Check deal</a>
+  <a href="#checklist">Checklist</a>
+  <a href="#flips">My flips</a>
+  <button id="stickySaveDeal" type="button">Save flip</button>
+</nav>
+
+<script src="data.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>
