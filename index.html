@@ -1,0 +1,2550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#070d1a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Reselling Manager" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icon-180.png" />
+
+  <title>Reselling Business Manager</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --green: #16a34a;
+      --red: #dc2626;
+      --amber: #d97706;
+      --purple: #7c3aed;
+      --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+      --bottom-safe: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      background: #070d1a;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 16px 16px 96px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(245, 247, 251, 0.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      margin: -16px -16px 18px;
+      padding: 14px 16px 12px;
+    }
+
+    .header-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .capital-pill {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 11px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .desktop-nav {
+      max-width: 1180px;
+      margin: 12px auto 0;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .desktop-nav button,
+    .mobile-nav button {
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 10px 13px;
+      font-weight: 800;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .desktop-nav button.active,
+    .mobile-nav button.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 30;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--line);
+      padding: 8px 8px calc(8px + var(--bottom-safe));
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .mobile-nav button {
+      border-radius: 14px;
+      padding: 8px 4px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      border: none;
+      background: transparent;
+    }
+
+    .mobile-nav button.active {
+      background: #eef4ff;
+      color: var(--primary);
+    }
+
+    .mobile-nav .icon { font-size: 17px; }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .page-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .page-title h2 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: -0.04em;
+    }
+
+    .page-title p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .grid { display: grid; gap: 14px; }
+    .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .two { grid-template-columns: 1.05fr 0.95fr; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .metric {
+      min-height: 112px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .metric .value {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+    }
+
+    .metric .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 12px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      font-size: 14px;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    .btnrow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-weight: 850;
+      font-size: 14px;
+    }
+
+    .primary { background: var(--primary); color: #fff; }
+    .primary:hover { background: var(--primary-dark); }
+    .secondary { background: #eef4ff; color: #1e40af; }
+    .ghost { background: #fff; border: 1px solid var(--line); color: var(--text); }
+    .danger { background: #fee2e2; color: #991b1b; }
+    .success { background: #dcfce7; color: #166534; }
+    .mini { font-size: 12px; padding: 8px 10px; border-radius: 10px; }
+
+    .line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding: 11px 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .line:last-child { border-bottom: none; }
+    .line strong { color: var(--text); }
+    .good { color: var(--green) !important; }
+    .bad { color: var(--red) !important; }
+    .warn { color: var(--amber) !important; }
+    .purple { color: var(--purple) !important; }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+      font-size: 13px;
+    }
+
+    th {
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 850;
+      background: #f1f5f9;
+      color: #334155;
+      white-space: nowrap;
+    }
+
+    .status.stock { background: #dbeafe; color: #1d4ed8; }
+    .status.sold { background: #dcfce7; color: #166534; }
+    .status.testing { background: #fef3c7; color: #92400e; }
+    .status.returned, .status.lost { background: #fee2e2; color: #991b1b; }
+
+    .mobile-cards {
+      display: none;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .item-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .item-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .item-head h3 {
+      margin: 0 0 4px;
+      font-size: 15px;
+      letter-spacing: -0.01em;
+    }
+
+    .item-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .mini-card {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .mini-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .mini-card strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 16px;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 22px;
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .notice {
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      border-left: 4px solid var(--primary);
+      color: #1e3a8a;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.48);
+      z-index: 50;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal.active { display: flex; }
+
+    .modal-panel {
+      width: min(720px, 100%);
+      max-height: 92vh;
+      overflow-y: auto;
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: 0 28px 80px rgba(15, 23, 42, 0.32);
+      padding: 16px;
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .modal-head h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr 170px;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .settings-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .sql-box {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+      overflow-x: auto;
+      white-space: pre;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      margin-top: 12px;
+    }
+
+    .small-text {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    body.locked {
+      background: #070d1a;
+    }
+
+    body.locked .app,
+    body.locked .mobile-nav {
+      display: none;
+    }
+
+    .pin-lock-screen {
+      min-height: 100vh;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.18), transparent 34%),
+        radial-gradient(circle at 50% 100%, rgba(37, 99, 235, 0.18), transparent 38%),
+        linear-gradient(180deg, #080d18 0%, #0b1222 50%, #101a33 100%);
+      color: #fff;
+    }
+
+    body.locked .pin-lock-screen {
+      display: flex;
+    }
+
+    .pin-card {
+      width: min(430px, 100%);
+      text-align: center;
+    }
+
+    .pin-avatar {
+      width: 82px;
+      height: 82px;
+      margin: 0 auto 24px;
+      border-radius: 999px;
+      background: linear-gradient(145deg, #1d4ed8, #7c3aed);
+      display: grid;
+      place-items: center;
+      font-size: 32px;
+      font-weight: 900;
+      border: 2px solid rgba(255, 255, 255, 0.28);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+    }
+
+    .pin-card h1 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+    }
+
+    .pin-card p {
+      margin: 10px auto 0;
+      max-width: 330px;
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .pin-dots {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      margin: 64px 0 46px;
+    }
+
+    .pin-dot {
+      width: 15px;
+      height: 15px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.34);
+      transition: 0.16s ease;
+    }
+
+    .pin-dot.filled {
+      background: #fff;
+      transform: scale(1.08);
+    }
+
+    .pin-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px 36px;
+      max-width: 340px;
+      margin: 0 auto;
+    }
+
+    .pin-key {
+      width: 76px;
+      height: 76px;
+      border-radius: 999px;
+      border: 1px solid rgba(147, 197, 253, 0.25);
+      background: rgba(255, 255, 255, 0.09);
+      color: #fff;
+      font-size: 38px;
+      font-weight: 500;
+      display: grid;
+      place-items: center;
+      margin: 0 auto;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .pin-key:active {
+      transform: scale(0.96);
+      background: rgba(255,255,255,0.18);
+    }
+
+    .pin-key.small {
+      font-size: 22px;
+    }
+
+    .pin-key.blank {
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .pin-message {
+      min-height: 22px;
+      margin-top: 24px;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .pin-message.error {
+      color: #fca5a5;
+    }
+
+    .pin-footer {
+      margin-top: 24px;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 15px;
+      font-weight: 700;
+      background: transparent;
+      border: 0;
+    }
+
+    @media (max-width: 390px) {
+      .pin-card h1 {
+        font-size: 26px;
+      }
+
+      .pin-pad {
+        gap: 20px 26px;
+      }
+
+      .pin-key {
+        width: 70px;
+        height: 70px;
+        font-size: 34px;
+      }
+
+      .pin-dots {
+        margin: 52px 0 38px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .two { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .search-row, .settings-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 650px) {
+      .app { padding: 12px 12px 96px; }
+      header { margin: -12px -12px 14px; padding: 12px; }
+      .desktop-nav { display: none; }
+      .mobile-nav { display: grid; }
+      .brand h1 { font-size: 18px; }
+      .brand p { display: none; }
+      .capital-pill { font-size: 11px; padding: 7px 9px; }
+      .page-title h2 { font-size: 22px; }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .card { padding: 14px; border-radius: 16px; }
+      .metric { min-height: 102px; }
+      .metric .value { font-size: 22px; }
+      .metric .label { font-size: 10px; }
+      .table-wrap table { display: none; }
+      .mobile-cards { display: grid; }
+      .modal { padding: 0; }
+      .modal-panel { border-radius: 22px 22px 0 0; max-height: 90vh; }
+    }
+  </style>
+</head>
+<body class="locked">
+  <div class="pin-lock-screen" id="pinLockScreen">
+    <div class="pin-card">
+      <div class="pin-avatar">R</div>
+      <h1 id="pinTitle">Good evening, Romario</h1>
+      <p id="pinSubtitle">Enter your passcode to open your reselling business manager.</p>
+
+      <div class="pin-dots" id="pinDots">
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+      </div>
+
+      <div class="pin-pad">
+        <button class="pin-key" type="button" onclick="pressPin('1')">1</button>
+        <button class="pin-key" type="button" onclick="pressPin('2')">2</button>
+        <button class="pin-key" type="button" onclick="pressPin('3')">3</button>
+        <button class="pin-key" type="button" onclick="pressPin('4')">4</button>
+        <button class="pin-key" type="button" onclick="pressPin('5')">5</button>
+        <button class="pin-key" type="button" onclick="pressPin('6')">6</button>
+        <button class="pin-key" type="button" onclick="pressPin('7')">7</button>
+        <button class="pin-key" type="button" onclick="pressPin('8')">8</button>
+        <button class="pin-key" type="button" onclick="pressPin('9')">9</button>
+        <button class="pin-key small" type="button" onclick="useFaceId()">⌘</button>
+        <button class="pin-key" type="button" onclick="pressPin('0')">0</button>
+        <button class="pin-key small" type="button" onclick="deletePin()">⌫</button>
+      </div>
+
+      <div class="pin-message" id="pinMessage"></div>
+      <button class="pin-footer" type="button" onclick="forgotPin()">Forgot your passcode?</button>
+    </div>
+  </div>
+
+  <div class="app">
+    <header>
+      <div class="header-inner">
+        <div class="brand">
+          <h1>Reselling Business Manager</h1>
+          <p>Items, stock, sales, expenses and business balance</p>
+        </div>
+        <div class="capital-pill" id="capitalPill">Cash: £0.00</div>
+      </div>
+      <nav class="desktop-nav" id="desktopNav"></nav>
+    </header>
+
+    <main>
+      <section class="view active" data-view="dashboard">
+        <div class="page-title">
+          <div>
+            <h2>Dashboard</h2>
+            <p>Your business numbers at a glance.</p>
+          </div>
+          <button class="btn primary" onclick="showView('add')">Add item</button>
+        </div>
+
+        <div class="grid cards" id="dashboardCards"></div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="card">
+            <h3 class="section-title">Profit and loss</h3>
+            <div id="profitLossSummary"></div>
+          </div>
+
+          <div class="card">
+            <h3 class="section-title">Cash vs stock</h3>
+            <div id="cashStockSummary"></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="card">
+            <h3 class="section-title">Current stock</h3>
+            <div id="dashboardStock"></div>
+          </div>
+
+          <div class="card">
+            <h3 class="section-title">Recent money movements</h3>
+            <div id="dashboardMovements"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="bought">
+        <div class="page-title">
+          <div>
+            <h2>Bought Items</h2>
+            <p>Everything you have bought for the business.</p>
+          </div>
+          <button class="btn primary" onclick="showView('add')">Add item</button>
+        </div>
+
+        <div class="card">
+          <div class="search-row">
+            <input id="boughtSearch" placeholder="Search bought items..." oninput="renderAll()" />
+            <select id="boughtFilter" onchange="renderAll()">
+              <option value="">All statuses</option>
+              <option value="In Stock">In Stock</option>
+              <option value="Listed">Listed</option>
+              <option value="Testing">Testing</option>
+              <option value="Sold">Sold</option>
+              <option value="Returned">Returned</option>
+              <option value="Lost">Lost</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Bought from</th>
+                  <th>Date bought</th>
+                  <th>Total cost</th>
+                  <th>Status</th>
+                  <th>Expected sale</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="boughtRows"></tbody>
+            </table>
+          </div>
+          <div class="mobile-cards" id="boughtCards"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="stock">
+        <div class="page-title">
+          <div>
+            <h2>In Stock</h2>
+            <p>Items you still own and have not sold yet.</p>
+          </div>
+          <button class="btn primary" onclick="showView('add')">Add item</button>
+        </div>
+
+        <div class="card">
+          <div class="search-row">
+            <input id="stockSearch" placeholder="Search stock..." oninput="renderAll()" />
+            <select id="stockFilter" onchange="renderAll()">
+              <option value="">All stock statuses</option>
+              <option value="In Stock">In Stock</option>
+              <option value="Listed">Listed</option>
+              <option value="Testing">Testing</option>
+              <option value="Returned">Returned</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>Total cost</th>
+                  <th>Expected sale</th>
+                  <th>Expected profit</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="stockRows"></tbody>
+            </table>
+          </div>
+          <div class="mobile-cards" id="stockCards"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="sold">
+        <div class="page-title">
+          <div>
+            <h2>Sold Items</h2>
+            <p>Completed sales with final profit and ROI.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="search-row">
+            <input id="soldSearch" placeholder="Search sold items..." oninput="renderAll()" />
+            <select id="soldPlatformFilter" onchange="renderAll()">
+              <option value="">All selling platforms</option>
+              <option>CeX</option>
+              <option>Vinted</option>
+              <option>eBay</option>
+              <option>Facebook Marketplace</option>
+              <option>Gumtree</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Sold on</th>
+                  <th>Sale price</th>
+                  <th>Selling fees</th>
+                  <th>Total cost</th>
+                  <th>Final profit</th>
+                  <th>ROI</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="soldRows"></tbody>
+            </table>
+          </div>
+          <div class="mobile-cards" id="soldCards"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="expenses">
+        <div class="page-title">
+          <div>
+            <h2>Expenses</h2>
+            <p>Track business costs that are not part of one item.</p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <form class="card" id="expenseForm">
+            <h3 class="section-title">Add expense</h3>
+            <div class="form-grid">
+              <div>
+                <label>Date</label>
+                <input type="date" id="expenseDate" />
+              </div>
+
+              <div>
+                <label>Category</label>
+                <select id="expenseCategory">
+                  <option>Packaging</option>
+                  <option>Postage</option>
+                  <option>Travel</option>
+                  <option>Cleaning supplies</option>
+                  <option>Repairs</option>
+                  <option>Refund</option>
+                  <option>Vinted promotion</option>
+                  <option>Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label>Amount £</label>
+                <input type="number" step="0.01" id="expenseAmount" value="0" />
+              </div>
+
+              <div>
+                <label>Description</label>
+                <input id="expenseDescription" placeholder="Bus fare, tape, refund, etc." />
+              </div>
+            </div>
+
+            <div class="btnrow">
+              <button class="btn primary" type="submit">Save expense</button>
+            </div>
+          </form>
+
+          <div class="card">
+            <h3 class="section-title">Expense summary</h3>
+            <div id="expenseSummary"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3 class="section-title">Expense history</h3>
+          <div id="expenseHistory"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="money">
+        <div class="page-title">
+          <div>
+            <h2>Money</h2>
+            <p>Your business balance and every money movement.</p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <form class="card" id="capitalForm">
+            <h3 class="section-title">Business balance</h3>
+            <div class="settings-row">
+              <div>
+                <label>Starting capital £</label>
+                <input type="number" step="0.01" id="startingCapital" value="0" />
+              </div>
+              <button class="btn primary" type="submit">Save</button>
+            </div>
+            <div class="notice" style="margin-top:12px">
+              Starting capital is the money you began the business with. Purchases, sales and expenses will adjust your cash balance automatically.
+            </div>
+          </form>
+
+          <form class="card" id="manualMovementForm">
+            <h3 class="section-title">Manual money movement</h3>
+            <div class="form-grid">
+              <div>
+                <label>Date</label>
+                <input type="date" id="manualDate" />
+              </div>
+              <div>
+                <label>Type</label>
+                <select id="manualType">
+                  <option value="in">Money in</option>
+                  <option value="out">Money out</option>
+                </select>
+              </div>
+              <div>
+                <label>Amount £</label>
+                <input type="number" step="0.01" id="manualAmount" value="0" />
+              </div>
+              <div>
+                <label>Description</label>
+                <input id="manualDescription" placeholder="Added cash, bank transfer, correction..." />
+              </div>
+            </div>
+            <div class="btnrow">
+              <button class="btn primary" type="submit">Save movement</button>
+            </div>
+          </form>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <h3 class="section-title">Money movement history</h3>
+          <div id="moneyMovementHistory"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="reports">
+        <div class="page-title">
+          <div>
+            <h2>Reports</h2>
+            <p>Monthly sales, expenses and net profit.</p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <h3 class="section-title">Profit and loss summary</h3>
+            <div id="reportsProfitLoss"></div>
+          </div>
+
+          <div class="card">
+            <h3 class="section-title">Business value summary</h3>
+            <div id="reportsValue"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3 class="section-title">Monthly report</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Sales</th>
+                  <th>Cost of goods sold</th>
+                  <th>Gross profit</th>
+                  <th>Expenses</th>
+                  <th>Net profit</th>
+                </tr>
+              </thead>
+              <tbody id="monthlyRows"></tbody>
+            </table>
+          </div>
+          <div class="mobile-cards" id="monthlyCards"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="add">
+        <div class="page-title">
+          <div>
+            <h2>Add Item</h2>
+            <p>Enter what you bought. It will appear in stock until you mark it sold.</p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <form class="card" id="itemForm">
+            <h3 class="section-title">Item details</h3>
+            <div class="form-grid">
+              <div>
+                <label>Item name</label>
+                <input id="itemName" placeholder="PS4 Controller" required />
+              </div>
+
+              <div>
+                <label>Category</label>
+                <select id="category">
+                  <option>Controllers</option>
+                  <option>Phones</option>
+                  <option>Consoles</option>
+                  <option>Games</option>
+                  <option>Clothing</option>
+                  <option>Headphones</option>
+                  <option>Watches</option>
+                  <option>Tablets</option>
+                  <option>Laptops</option>
+                  <option>Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label>Where bought from</label>
+                <input id="boughtFrom" placeholder="Vinted, Facebook, eBay..." />
+              </div>
+
+              <div>
+                <label>Date bought</label>
+                <input type="date" id="dateBought" />
+              </div>
+
+              <div>
+                <label>Purchase price £</label>
+                <input type="number" step="0.01" id="purchasePrice" value="0" />
+              </div>
+
+              <div>
+                <label>Extra costs £</label>
+                <input type="number" step="0.01" id="extraCosts" value="0" />
+              </div>
+
+              <div>
+                <label>Current status</label>
+                <select id="status">
+                  <option>In Stock</option>
+                  <option>Listed</option>
+                  <option>Testing</option>
+                  <option>Returned</option>
+                </select>
+              </div>
+
+              <div>
+                <label>Expected selling price £</label>
+                <input type="number" step="0.01" id="expectedSellingPrice" value="0" />
+              </div>
+
+              <div class="full">
+                <label>Notes</label>
+                <textarea id="notes" placeholder="Condition, seller info, faults, CeX expected grade, etc."></textarea>
+              </div>
+            </div>
+
+            <div class="btnrow">
+              <button class="btn primary" type="submit">Save item</button>
+              <button class="btn ghost" type="button" onclick="clearItemForm()">Clear</button>
+            </div>
+          </form>
+
+          <aside class="card">
+            <h3 class="section-title">Live totals</h3>
+            <div id="liveTotals"></div>
+            <div class="notice" style="margin-top:12px">
+              Total cost is purchase price plus any extra costs like postage, fees, repairs or travel.
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="mobile-nav" id="mobileNav"></nav>
+
+  <div class="modal" id="soldModal">
+    <div class="modal-panel">
+      <div class="modal-head">
+        <h2>Mark item sold</h2>
+        <button class="btn ghost mini" onclick="closeSoldModal()">Close</button>
+      </div>
+
+      <form id="soldForm">
+        <input type="hidden" id="soldItemId" />
+        <div class="notice" id="soldItemInfo" style="margin-bottom:12px"></div>
+
+        <div class="form-grid">
+          <div>
+            <label>Where sold</label>
+            <select id="soldWhere">
+              <option>CeX</option>
+              <option>Vinted</option>
+              <option>eBay</option>
+              <option>Facebook Marketplace</option>
+              <option>Gumtree</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Date sold</label>
+            <input type="date" id="dateSold" />
+          </div>
+
+          <div>
+            <label>Sale price £</label>
+            <input type="number" step="0.01" id="salePrice" value="0" />
+          </div>
+
+          <div>
+            <label>Selling fees £</label>
+            <input type="number" step="0.01" id="sellingFees" value="0" />
+          </div>
+
+          <div class="full">
+            <label>Sale notes</label>
+            <textarea id="saleNotes" placeholder="Buyer info, CeX grade, voucher/cash, etc."></textarea>
+          </div>
+        </div>
+
+        <div id="soldLiveTotals" style="margin-top:12px"></div>
+
+        <div class="btnrow">
+          <button class="btn primary" type="submit">Save sale</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="lossModal">
+    <div class="modal-panel">
+      <div class="modal-head">
+        <h2>Mark item as loss / removed</h2>
+        <button class="btn ghost mini" onclick="closeLossModal()">Close</button>
+      </div>
+
+      <form id="lossForm">
+        <input type="hidden" id="lossItemId" />
+        <div class="notice" id="lossItemInfo" style="margin-bottom:12px"></div>
+
+        <div class="form-grid">
+          <div>
+            <label>Date</label>
+            <input type="date" id="lossDate" />
+          </div>
+
+          <div>
+            <label>Money recovered £</label>
+            <input type="number" step="0.01" id="moneyRecovered" value="0" />
+          </div>
+
+          <div class="full">
+            <label>Reason</label>
+            <textarea id="lossReason" placeholder="Broken, refunded, kept, CeX rejected, sold at loss elsewhere, etc."></textarea>
+          </div>
+        </div>
+
+        <div id="lossLiveTotals" style="margin-top:12px"></div>
+
+        <div class="btnrow">
+          <button class="btn danger" type="submit">Save loss</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "reselling_business_manager_accounting_v1";
+    const OLD_SIMPLE_KEY = "simple_reselling_business_manager_v1";
+    const SUPABASE_SETTINGS_KEY = "reselling_business_manager_supabase_settings_v1";
+    const BACKGROUND_SUPABASE_URL = "https://tqckiqknrgkkimumftsk.supabase.co";
+    const BACKGROUND_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxY2tpcWtucmdra2ltdW1mdHNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjgxODksImV4cCI6MjA5NjYwNDE4OX0.4pMZIOndeHrRVB0pbLQD159XRBxIPiNZY4-D6WUiVKo";
+    const PIN_HASH_KEY = "reselling_business_pin_hash_v1";
+    const OWNER_SUPABASE_EMAIL = "romariodennis21@gmail.com";
+
+    const SUPABASE_SQL = `create table if not exists public.reselling_business_data (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.reselling_business_data enable row level security;
+
+drop policy if exists "Users can read own reselling business data" on public.reselling_business_data;
+create policy "Users can read own reselling business data"
+on public.reselling_business_data
+for select
+using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own reselling business data" on public.reselling_business_data;
+create policy "Users can insert own reselling business data"
+on public.reselling_business_data
+for insert
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own reselling business data" on public.reselling_business_data;
+create policy "Users can update own reselling business data"
+on public.reselling_business_data
+for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);`;
+
+    const navItems = [
+      ["dashboard", "Dashboard", "🏠"],
+      ["bought", "Bought", "🧾"],
+      ["stock", "Stock", "📦"],
+      ["sold", "Sold", "✅"],
+      ["expenses", "Expenses", "💸"],
+      ["money", "Money", "💷"],
+      ["reports", "Reports", "📊"]
+    ];
+
+    const mobileNavItems = [
+      ["dashboard", "Home", "🏠"],
+      ["stock", "Stock", "📦"],
+      ["sold", "Sold", "✅"],
+      ["money", "Money", "💷"]
+    ];
+
+    let db = loadDb();
+    let supabaseClient = null;
+    let pinInput = "";
+    let pendingNewPin = null;
+    let autoSyncTimer = null;
+    let lastAutoSyncMessage = "Auto-sync is ready once you log in.";
+
+    const $ = (id) => document.getElementById(id);
+    const money = (value) => "£" + Number(value || 0).toFixed(2);
+    const pct = (value) => (isFinite(value) ? Number(value).toFixed(1) : "0.0") + "%";
+    const today = () => new Date().toISOString().slice(0, 10);
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+    function escapeHtml(text) {
+      return String(text || "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function defaultDb() {
+      return {
+        settings: { startingCapital: 0 },
+        items: [],
+        expenses: [],
+        movements: []
+      };
+    }
+
+    function loadDb() {
+      try {
+        const existing = localStorage.getItem(STORAGE_KEY);
+        if (existing) return normaliseDb(JSON.parse(existing));
+
+        const oldSimple = localStorage.getItem(OLD_SIMPLE_KEY);
+        if (oldSimple) {
+          const oldItems = JSON.parse(oldSimple) || [];
+          const migrated = defaultDb();
+          migrated.items = oldItems;
+          migrated.movements = generateMovementsFromItems(oldItems);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+          return migrated;
+        }
+      } catch {}
+      return defaultDb();
+    }
+
+    function normaliseDb(data) {
+      const base = defaultDb();
+      return {
+        settings: { ...base.settings, ...(data.settings || {}) },
+        items: data.items || [],
+        expenses: data.expenses || [],
+        movements: data.movements || []
+      };
+    }
+
+    function saveDb() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+      renderAll();
+      scheduleAutoSync();
+    }
+
+    function generateMovementsFromItems(itemList) {
+      const movements = [];
+      itemList.forEach(item => {
+        const cost = itemTotalCost(item);
+        if (cost) {
+          movements.push({
+            id: uid(),
+            date: item.dateBought || today(),
+            type: "Purchase",
+            description: "Bought " + item.name,
+            amount: -cost,
+            linkedItemId: item.id
+          });
+        }
+        if (item.sale) {
+          const netSale = Number(item.sale.salePrice || 0) - Number(item.sale.sellingFees || 0);
+          movements.push({
+            id: uid(),
+            date: item.sale.dateSold || today(),
+            type: "Sale",
+            description: "Sold " + item.name,
+            amount: netSale,
+            linkedItemId: item.id
+          });
+        }
+      });
+      return movements;
+    }
+
+    function itemTotalCost(item) {
+      return Number(item.purchasePrice || 0) + Number(item.extraCosts || 0);
+    }
+
+    function expectedProfit(item) {
+      return Number(item.expectedSellingPrice || 0) - itemTotalCost(item);
+    }
+
+    function finalProfit(item) {
+      if (!item.sale) return 0;
+      return Number(item.sale.salePrice || 0) - Number(item.sale.sellingFees || 0) - itemTotalCost(item);
+    }
+
+    function finalRoi(item) {
+      const cost = itemTotalCost(item);
+      return cost ? (finalProfit(item) / cost) * 100 : 0;
+    }
+
+    function lossProfit(item) {
+      if (!item.loss) return 0;
+      return Number(item.loss.moneyRecovered || 0) - itemTotalCost(item);
+    }
+
+    function activeStock() {
+      return db.items.filter(item => !item.sale && !item.loss && item.status !== "Sold" && item.status !== "Lost");
+    }
+
+    function soldItems() {
+      return db.items.filter(item => item.sale || item.status === "Sold");
+    }
+
+    function lostItems() {
+      return db.items.filter(item => item.loss || item.status === "Lost");
+    }
+
+    function allCompletedItems() {
+      return [...soldItems(), ...lostItems()];
+    }
+
+    function totalExpenses() {
+      return db.expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+    }
+
+    function cashBalance() {
+      const movementTotal = db.movements.reduce((sum, movement) => sum + Number(movement.amount || 0), 0);
+      return Number(db.settings.startingCapital || 0) + movementTotal;
+    }
+
+    function stockValueAtCost() {
+      return activeStock().reduce((sum, item) => sum + itemTotalCost(item), 0);
+    }
+
+    function businessValue() {
+      return cashBalance() + stockValueAtCost();
+    }
+
+    function totalSalesRevenue() {
+      return soldItems().reduce((sum, item) => sum + Number(item.sale?.salePrice || 0), 0);
+    }
+
+    function totalSellingFees() {
+      return soldItems().reduce((sum, item) => sum + Number(item.sale?.sellingFees || 0), 0);
+    }
+
+    function costOfGoodsSold() {
+      return soldItems().reduce((sum, item) => sum + itemTotalCost(item), 0);
+    }
+
+    function grossProfit() {
+      return totalSalesRevenue() - totalSellingFees() - costOfGoodsSold();
+    }
+
+    function netProfit() {
+      const lostProfit = lostItems().reduce((sum, item) => sum + lossProfit(item), 0);
+      return grossProfit() + lostProfit - totalExpenses();
+    }
+
+    function renderNav() {
+      $("desktopNav").innerHTML = navItems.map(item => `
+        <button data-nav="${item[0]}" onclick="showView('${item[0]}')">${item[2]} ${item[1]}</button>
+      `).join("");
+
+      $("mobileNav").innerHTML = mobileNavItems.map(item => `
+        <button data-nav="${item[0]}" onclick="showView('${item[0]}')">
+          <span class="icon">${item[2]}</span>
+          <span>${item[1]}</span>
+        </button>
+      `).join("");
+
+      setActiveNav("dashboard");
+    }
+
+    function showView(view) {
+      document.querySelectorAll(".view").forEach(section => {
+        section.classList.toggle("active", section.dataset.view === view);
+      });
+      setActiveNav(view);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      renderAll();
+    }
+
+    function setActiveNav(view) {
+      document.querySelectorAll("[data-nav]").forEach(button => {
+        button.classList.toggle("active", button.dataset.nav === view);
+      });
+    }
+
+    function statusClass(status) {
+      if (status === "Sold") return "sold";
+      if (status === "Testing") return "testing";
+      if (status === "Returned") return "returned";
+      if (status === "Lost") return "lost";
+      return "stock";
+    }
+
+    function renderDashboard() {
+      const stock = activeStock();
+      const sold = soldItems();
+
+      $("capitalPill").textContent = "Cash: " + money(cashBalance());
+
+      const cards = [
+        ["Cash available", money(cashBalance()), "Starting capital plus money movements", cashBalance() >= 0 ? "good" : "bad"],
+        ["Stock value", money(stockValueAtCost()), "Money tied up in unsold items", "purple"],
+        ["Total sales", money(totalSalesRevenue()), "Sale price of sold items"],
+        ["Net profit", money(netProfit()), "After costs, fees, losses and expenses", netProfit() >= 0 ? "good" : "bad"],
+        ["Items bought", db.items.length, "All items added"],
+        ["Currently in stock", stock.length, "Unsold items"],
+        ["Items sold", sold.length, "Completed sales"],
+        ["Business value", money(businessValue()), "Cash available plus stock at cost"]
+      ];
+
+      $("dashboardCards").innerHTML = cards.map(card => `
+        <div class="card metric">
+          <div class="label">${card[0]}</div>
+          <div class="value ${card[3] || ""}">${card[1]}</div>
+          <div class="hint">${card[2]}</div>
+        </div>
+      `).join("");
+
+      $("profitLossSummary").innerHTML = profitLossHtml();
+      $("cashStockSummary").innerHTML = `
+        <div class="line"><span>Cash available</span><strong class="${cashBalance() >= 0 ? "good" : "bad"}">${money(cashBalance())}</strong></div>
+        <div class="line"><span>Stock value at cost</span><strong>${money(stockValueAtCost())}</strong></div>
+        <div class="line"><span>Total business value</span><strong>${money(businessValue())}</strong></div>
+      `;
+
+      $("dashboardStock").innerHTML = stock.slice(0, 6).map(item => `
+        <div class="line">
+          <span><strong>${escapeHtml(item.name)}</strong><br><span>${escapeHtml(item.category)} • ${escapeHtml(item.status)}</span></span>
+          <strong>${money(itemTotalCost(item))}</strong>
+        </div>
+      `).join("") || `<div class="empty">No items in stock yet.</div>`;
+
+      $("dashboardMovements").innerHTML = db.movements.slice(-6).reverse().map(movement => `
+        <div class="line">
+          <span><strong>${escapeHtml(movement.type)}</strong><br><span>${escapeHtml(movement.description)} • ${movement.date}</span></span>
+          <strong class="${Number(movement.amount) >= 0 ? "good" : "bad"}">${money(movement.amount)}</strong>
+        </div>
+      `).join("") || `<div class="empty">No money movements yet.</div>`;
+    }
+
+    function profitLossHtml() {
+      return `
+        <div class="line"><span>Total sales</span><strong>${money(totalSalesRevenue())}</strong></div>
+        <div class="line"><span>Selling fees</span><strong class="bad">${money(totalSellingFees())}</strong></div>
+        <div class="line"><span>Cost of goods sold</span><strong class="bad">${money(costOfGoodsSold())}</strong></div>
+        <div class="line"><span>Gross profit</span><strong class="${grossProfit() >= 0 ? "good" : "bad"}">${money(grossProfit())}</strong></div>
+        <div class="line"><span>Expenses</span><strong class="bad">${money(totalExpenses())}</strong></div>
+        <div class="line"><span>Net profit</span><strong class="${netProfit() >= 0 ? "good" : "bad"}">${money(netProfit())}</strong></div>
+      `;
+    }
+
+    function filterItems(list, searchId, filterId, soldPlatform = false) {
+      const search = ($(searchId)?.value || "").toLowerCase().trim();
+      const filter = ($(filterId)?.value || "").trim();
+
+      return list.filter(item => {
+        const text = [
+          item.name,
+          item.category,
+          item.boughtFrom,
+          item.status,
+          item.notes,
+          item.sale?.soldWhere,
+          item.sale?.saleNotes,
+          item.loss?.reason
+        ].join(" ").toLowerCase();
+
+        const searchMatch = !search || text.includes(search);
+
+        let filterMatch = true;
+        if (filter) {
+          if (soldPlatform) {
+            filterMatch = item.sale?.soldWhere === filter;
+          } else {
+            filterMatch = item.status === filter || (filter === "Sold" && item.sale) || (filter === "Lost" && item.loss);
+          }
+        }
+
+        return searchMatch && filterMatch;
+      });
+    }
+
+    function renderBoughtItems() {
+      const list = filterItems(db.items, "boughtSearch", "boughtFilter");
+
+      $("boughtRows").innerHTML = list.map(item => `
+        <tr>
+          <td><strong>${escapeHtml(item.name)}</strong><br><span>${escapeHtml(item.category)}</span></td>
+          <td>${escapeHtml(item.boughtFrom || "-")}</td>
+          <td>${item.dateBought || "-"}</td>
+          <td>${money(itemTotalCost(item))}</td>
+          <td><span class="status ${statusClass(item.sale ? "Sold" : item.loss ? "Lost" : item.status)}">${item.sale ? "Sold" : item.loss ? "Lost" : escapeHtml(item.status)}</span></td>
+          <td>${money(item.expectedSellingPrice)}</td>
+          <td>${itemActions(item)}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="7"><div class="empty">No bought items yet.</div></td></tr>`;
+
+      $("boughtCards").innerHTML = list.map(itemCard).join("") || `<div class="empty">No bought items yet.</div>`;
+    }
+
+    function renderStock() {
+      const list = filterItems(activeStock(), "stockSearch", "stockFilter");
+
+      $("stockRows").innerHTML = list.map(item => `
+        <tr>
+          <td><strong>${escapeHtml(item.name)}</strong><br><span>${escapeHtml(item.boughtFrom || "-")}</span></td>
+          <td>${escapeHtml(item.category)}</td>
+          <td>${money(itemTotalCost(item))}</td>
+          <td>${money(item.expectedSellingPrice)}</td>
+          <td class="${expectedProfit(item) >= 0 ? "good" : "bad"}"><strong>${money(expectedProfit(item))}</strong></td>
+          <td><span class="status ${statusClass(item.status)}">${escapeHtml(item.status)}</span></td>
+          <td>${itemActions(item)}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="7"><div class="empty">No items in stock.</div></td></tr>`;
+
+      $("stockCards").innerHTML = list.map(itemCard).join("") || `<div class="empty">No items in stock.</div>`;
+    }
+
+    function renderSold() {
+      const list = filterItems(soldItems(), "soldSearch", "soldPlatformFilter", true);
+
+      $("soldRows").innerHTML = list.map(item => `
+        <tr>
+          <td><strong>${escapeHtml(item.name)}</strong><br><span>${escapeHtml(item.category)}</span></td>
+          <td>${escapeHtml(item.sale?.soldWhere || "-")}<br><span>${item.sale?.dateSold || "-"}</span></td>
+          <td>${money(item.sale?.salePrice)}</td>
+          <td>${money(item.sale?.sellingFees)}</td>
+          <td>${money(itemTotalCost(item))}</td>
+          <td class="${finalProfit(item) >= 0 ? "good" : "bad"}"><strong>${money(finalProfit(item))}</strong></td>
+          <td>${pct(finalRoi(item))}</td>
+          <td>${itemActions(item)}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="8"><div class="empty">No sold items yet.</div></td></tr>`;
+
+      $("soldCards").innerHTML = list.map(itemCard).join("") || `<div class="empty">No sold items yet.</div>`;
+    }
+
+    function itemCard(item) {
+      const sold = !!item.sale;
+      const lost = !!item.loss;
+      const displayStatus = sold ? "Sold" : lost ? "Lost" : item.status;
+      const profit = sold ? finalProfit(item) : lost ? lossProfit(item) : expectedProfit(item);
+
+      return `
+        <div class="item-card">
+          <div class="item-head">
+            <div>
+              <h3>${escapeHtml(item.name)}</h3>
+              <p>${escapeHtml(item.category)} • ${escapeHtml(item.boughtFrom || "-")}</p>
+            </div>
+            <span class="status ${statusClass(displayStatus)}">${escapeHtml(displayStatus)}</span>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini-card">
+              <span>Total cost</span>
+              <strong>${money(itemTotalCost(item))}</strong>
+            </div>
+            <div class="mini-card">
+              <span>${sold ? "Final profit" : lost ? "Loss result" : "Expected profit"}</span>
+              <strong class="${profit >= 0 ? "good" : "bad"}">${money(profit)}</strong>
+            </div>
+          </div>
+
+          <div class="btnrow">
+            ${itemActions(item)}
+          </div>
+        </div>
+      `;
+    }
+
+    function itemActions(item) {
+      if (item.sale || item.loss) {
+        return `
+          <button class="btn ghost mini" onclick="editItem('${item.id}')">Edit</button>
+          <button class="btn danger mini" onclick="deleteItem('${item.id}')">Delete</button>
+        `;
+      }
+
+      return `
+        <button class="btn success mini" onclick="openSoldModal('${item.id}')">Mark sold</button>
+        <button class="btn danger mini" onclick="openLossModal('${item.id}')">Loss</button>
+        <button class="btn ghost mini" onclick="editItem('${item.id}')">Edit</button>
+        <button class="btn danger mini" onclick="deleteItem('${item.id}')">Delete</button>
+      `;
+    }
+
+    function renderExpenses() {
+      const byCategory = {};
+      db.expenses.forEach(expense => {
+        byCategory[expense.category] = (byCategory[expense.category] || 0) + Number(expense.amount || 0);
+      });
+
+      $("expenseSummary").innerHTML = `
+        <div class="line"><span>Total expenses</span><strong class="bad">${money(totalExpenses())}</strong></div>
+        ${Object.entries(byCategory).sort((a,b) => b[1] - a[1]).map(([category, amount]) => `
+          <div class="line"><span>${escapeHtml(category)}</span><strong>${money(amount)}</strong></div>
+        `).join("")}
+      `;
+
+      $("expenseHistory").innerHTML = db.expenses.slice().reverse().map(expense => `
+        <div class="line">
+          <span><strong>${escapeHtml(expense.category)}</strong><br><span>${escapeHtml(expense.description || "-")} • ${expense.date}</span></span>
+          <span>
+            <strong class="bad">${money(expense.amount)}</strong>
+            <button class="btn danger mini" style="margin-left:8px" onclick="deleteExpense('${expense.id}')">Delete</button>
+          </span>
+        </div>
+      `).join("") || `<div class="empty">No expenses yet.</div>`;
+    }
+
+    function renderMoney() {
+      $("moneyMovementHistory").innerHTML = db.movements.slice().reverse().map(movement => `
+        <div class="line">
+          <span><strong>${escapeHtml(movement.type)}</strong><br><span>${escapeHtml(movement.description || "-")} • ${movement.date}</span></span>
+          <span>
+            <strong class="${Number(movement.amount) >= 0 ? "good" : "bad"}">${money(movement.amount)}</strong>
+            ${movement.manual ? `<button class="btn danger mini" style="margin-left:8px" onclick="deleteMovement('${movement.id}')">Delete</button>` : ""}
+          </span>
+        </div>
+      `).join("") || `<div class="empty">No money movements yet.</div>`;
+    }
+
+    function renderReports() {
+      $("reportsProfitLoss").innerHTML = profitLossHtml();
+      $("reportsValue").innerHTML = `
+        <div class="line"><span>Cash available</span><strong>${money(cashBalance())}</strong></div>
+        <div class="line"><span>Stock value at cost</span><strong>${money(stockValueAtCost())}</strong></div>
+        <div class="line"><span>Total business value</span><strong>${money(businessValue())}</strong></div>
+      `;
+
+      const months = {};
+
+      soldItems().forEach(item => {
+        const month = (item.sale?.dateSold || today()).slice(0, 7);
+        if (!months[month]) months[month] = { sales: 0, cogs: 0, gross: 0, expenses: 0 };
+        months[month].sales += Number(item.sale?.salePrice || 0);
+        months[month].cogs += itemTotalCost(item);
+        months[month].gross += finalProfit(item);
+      });
+
+      db.expenses.forEach(expense => {
+        const month = (expense.date || today()).slice(0, 7);
+        if (!months[month]) months[month] = { sales: 0, cogs: 0, gross: 0, expenses: 0 };
+        months[month].expenses += Number(expense.amount || 0);
+      });
+
+      const rows = Object.entries(months).sort((a,b) => b[0].localeCompare(a[0]));
+
+      $("monthlyRows").innerHTML = rows.map(([month, data]) => `
+        <tr>
+          <td>${month}</td>
+          <td>${money(data.sales)}</td>
+          <td>${money(data.cogs)}</td>
+          <td class="${data.gross >= 0 ? "good" : "bad"}"><strong>${money(data.gross)}</strong></td>
+          <td>${money(data.expenses)}</td>
+          <td class="${data.gross - data.expenses >= 0 ? "good" : "bad"}"><strong>${money(data.gross - data.expenses)}</strong></td>
+        </tr>
+      `).join("") || `<tr><td colspan="6"><div class="empty">No monthly report yet.</div></td></tr>`;
+
+      $("monthlyCards").innerHTML = rows.map(([month, data]) => `
+        <div class="item-card">
+          <div class="item-head">
+            <div>
+              <h3>${month}</h3>
+              <p>Sales ${money(data.sales)} • Expenses ${money(data.expenses)}</p>
+            </div>
+            <strong class="${data.gross - data.expenses >= 0 ? "good" : "bad"}">${money(data.gross - data.expenses)}</strong>
+          </div>
+        </div>
+      `).join("") || `<div class="empty">No monthly report yet.</div>`;
+    }
+
+    function renderLiveTotals() {
+      const purchase = Number($("purchasePrice").value || 0);
+      const extra = Number($("extraCosts").value || 0);
+      const expected = Number($("expectedSellingPrice").value || 0);
+      const total = purchase + extra;
+      const profit = expected - total;
+      const roiValue = total ? (profit / total) * 100 : 0;
+
+      $("liveTotals").innerHTML = `
+        <div class="line"><span>Total cost</span><strong>${money(total)}</strong></div>
+        <div class="line"><span>Expected sale</span><strong>${money(expected)}</strong></div>
+        <div class="line"><span>Expected profit</span><strong class="${profit >= 0 ? "good" : "bad"}">${money(profit)}</strong></div>
+        <div class="line"><span>Expected ROI</span><strong>${pct(roiValue)}</strong></div>
+      `;
+    }
+
+    function renderSoldLiveTotals() {
+      const item = db.items.find(i => i.id === $("soldItemId").value);
+      if (!item) return;
+
+      const salePrice = Number($("salePrice").value || 0);
+      const fees = Number($("sellingFees").value || 0);
+      const totalCost = itemTotalCost(item);
+      const profit = salePrice - fees - totalCost;
+      const roiValue = totalCost ? (profit / totalCost) * 100 : 0;
+
+      $("soldLiveTotals").innerHTML = `
+        <div class="line"><span>Total cost</span><strong>${money(totalCost)}</strong></div>
+        <div class="line"><span>Net sale</span><strong>${money(salePrice - fees)}</strong></div>
+        <div class="line"><span>Final profit</span><strong class="${profit >= 0 ? "good" : "bad"}">${money(profit)}</strong></div>
+        <div class="line"><span>ROI</span><strong>${pct(roiValue)}</strong></div>
+      `;
+    }
+
+    function renderLossLiveTotals() {
+      const item = db.items.find(i => i.id === $("lossItemId").value);
+      if (!item) return;
+
+      const recovered = Number($("moneyRecovered").value || 0);
+      const totalCost = itemTotalCost(item);
+      const result = recovered - totalCost;
+
+      $("lossLiveTotals").innerHTML = `
+        <div class="line"><span>Total cost</span><strong>${money(totalCost)}</strong></div>
+        <div class="line"><span>Money recovered</span><strong>${money(recovered)}</strong></div>
+        <div class="line"><span>Final result</span><strong class="${result >= 0 ? "good" : "bad"}">${money(result)}</strong></div>
+      `;
+    }
+
+    function saveItem(e) {
+      e.preventDefault();
+
+      const editingId = $("itemForm").dataset.editingId;
+      const data = {
+        id: editingId || uid(),
+        name: $("itemName").value.trim(),
+        category: $("category").value,
+        boughtFrom: $("boughtFrom").value.trim(),
+        dateBought: $("dateBought").value || today(),
+        purchasePrice: Number($("purchasePrice").value || 0),
+        extraCosts: Number($("extraCosts").value || 0),
+        status: $("status").value,
+        expectedSellingPrice: Number($("expectedSellingPrice").value || 0),
+        notes: $("notes").value.trim()
+      };
+
+      if (!data.name) {
+        alert("Please enter an item name.");
+        return;
+      }
+
+      const totalCost = data.purchasePrice + data.extraCosts;
+
+      if (editingId) {
+        const index = db.items.findIndex(item => item.id === editingId);
+        const existingSale = db.items[index]?.sale;
+        const existingLoss = db.items[index]?.loss;
+        db.items[index] = { ...data, sale: existingSale, loss: existingLoss };
+
+        const purchaseMovement = db.movements.find(m => m.linkedItemId === editingId && m.type === "Purchase");
+        if (purchaseMovement) {
+          purchaseMovement.date = data.dateBought;
+          purchaseMovement.description = "Bought " + data.name;
+          purchaseMovement.amount = -totalCost;
+        }
+      } else {
+        db.items.push(data);
+        if (totalCost) {
+          db.movements.push({
+            id: uid(),
+            date: data.dateBought,
+            type: "Purchase",
+            description: "Bought " + data.name,
+            amount: -totalCost,
+            linkedItemId: data.id
+          });
+        }
+      }
+
+      delete $("itemForm").dataset.editingId;
+      saveDb();
+      clearItemForm();
+      showView("stock");
+    }
+
+    function editItem(id) {
+      const item = db.items.find(i => i.id === id);
+      if (!item) return;
+
+      $("itemForm").dataset.editingId = id;
+      $("itemName").value = item.name || "";
+      $("category").value = item.category || "Other";
+      $("boughtFrom").value = item.boughtFrom || "";
+      $("dateBought").value = item.dateBought || today();
+      $("purchasePrice").value = item.purchasePrice || 0;
+      $("extraCosts").value = item.extraCosts || 0;
+      $("status").value = item.sale || item.loss ? "In Stock" : (item.status || "In Stock");
+      $("expectedSellingPrice").value = item.expectedSellingPrice || 0;
+      $("notes").value = item.notes || "";
+      renderLiveTotals();
+      showView("add");
+    }
+
+    function clearItemForm() {
+      $("itemForm").reset();
+      $("dateBought").value = today();
+      $("purchasePrice").value = 0;
+      $("extraCosts").value = 0;
+      $("expectedSellingPrice").value = 0;
+      delete $("itemForm").dataset.editingId;
+      renderLiveTotals();
+    }
+
+    function deleteItem(id) {
+      if (!confirm("Delete this item and its linked money movements?")) return;
+      db.items = db.items.filter(item => item.id !== id);
+      db.movements = db.movements.filter(movement => movement.linkedItemId !== id);
+      saveDb();
+    }
+
+    function openSoldModal(id) {
+      const item = db.items.find(i => i.id === id);
+      if (!item) return;
+
+      $("soldItemId").value = id;
+      $("dateSold").value = today();
+      $("salePrice").value = item.expectedSellingPrice || 0;
+      $("sellingFees").value = 0;
+      $("saleNotes").value = "";
+      $("soldItemInfo").innerHTML = `<strong>${escapeHtml(item.name)}</strong><br>Total cost: ${money(itemTotalCost(item))}`;
+      renderSoldLiveTotals();
+      $("soldModal").classList.add("active");
+    }
+
+    function closeSoldModal() {
+      $("soldModal").classList.remove("active");
+    }
+
+    function saveSale(e) {
+      e.preventDefault();
+
+      const item = db.items.find(i => i.id === $("soldItemId").value);
+      if (!item) return;
+
+      item.status = "Sold";
+      item.sale = {
+        soldWhere: $("soldWhere").value,
+        dateSold: $("dateSold").value || today(),
+        salePrice: Number($("salePrice").value || 0),
+        sellingFees: Number($("sellingFees").value || 0),
+        saleNotes: $("saleNotes").value.trim()
+      };
+
+      const netSale = item.sale.salePrice - item.sale.sellingFees;
+      db.movements = db.movements.filter(m => !(m.linkedItemId === item.id && m.type === "Sale"));
+      db.movements.push({
+        id: uid(),
+        date: item.sale.dateSold,
+        type: "Sale",
+        description: "Sold " + item.name + " on " + item.sale.soldWhere,
+        amount: netSale,
+        linkedItemId: item.id
+      });
+
+      saveDb();
+      closeSoldModal();
+      showView("sold");
+    }
+
+    function openLossModal(id) {
+      const item = db.items.find(i => i.id === id);
+      if (!item) return;
+
+      $("lossItemId").value = id;
+      $("lossDate").value = today();
+      $("moneyRecovered").value = 0;
+      $("lossReason").value = "";
+      $("lossItemInfo").innerHTML = `<strong>${escapeHtml(item.name)}</strong><br>Total cost: ${money(itemTotalCost(item))}`;
+      renderLossLiveTotals();
+      $("lossModal").classList.add("active");
+    }
+
+    function closeLossModal() {
+      $("lossModal").classList.remove("active");
+    }
+
+    function saveLoss(e) {
+      e.preventDefault();
+
+      const item = db.items.find(i => i.id === $("lossItemId").value);
+      if (!item) return;
+
+      item.status = "Lost";
+      item.loss = {
+        date: $("lossDate").value || today(),
+        moneyRecovered: Number($("moneyRecovered").value || 0),
+        reason: $("lossReason").value.trim()
+      };
+
+      db.movements = db.movements.filter(m => !(m.linkedItemId === item.id && m.type === "Loss recovery"));
+      if (item.loss.moneyRecovered) {
+        db.movements.push({
+          id: uid(),
+          date: item.loss.date,
+          type: "Loss recovery",
+          description: "Recovered money from " + item.name,
+          amount: item.loss.moneyRecovered,
+          linkedItemId: item.id
+        });
+      }
+
+      saveDb();
+      closeLossModal();
+      showView("bought");
+    }
+
+    function saveExpense(e) {
+      e.preventDefault();
+
+      const amount = Number($("expenseAmount").value || 0);
+      if (!amount) {
+        alert("Please enter an expense amount.");
+        return;
+      }
+
+      const expense = {
+        id: uid(),
+        date: $("expenseDate").value || today(),
+        category: $("expenseCategory").value,
+        amount,
+        description: $("expenseDescription").value.trim()
+      };
+
+      db.expenses.push(expense);
+      db.movements.push({
+        id: uid(),
+        date: expense.date,
+        type: "Expense",
+        description: expense.category + (expense.description ? ": " + expense.description : ""),
+        amount: -Math.abs(expense.amount),
+        linkedExpenseId: expense.id
+      });
+
+      saveDb();
+      $("expenseForm").reset();
+      $("expenseDate").value = today();
+      $("expenseAmount").value = 0;
+    }
+
+    function deleteExpense(id) {
+      if (!confirm("Delete this expense?")) return;
+      db.expenses = db.expenses.filter(expense => expense.id !== id);
+      db.movements = db.movements.filter(movement => movement.linkedExpenseId !== id);
+      saveDb();
+    }
+
+    function saveCapital(e) {
+      e.preventDefault();
+      db.settings.startingCapital = Number($("startingCapital").value || 0);
+      saveDb();
+      alert("Starting capital saved.");
+    }
+
+    function saveManualMovement(e) {
+      e.preventDefault();
+
+      const amount = Number($("manualAmount").value || 0);
+      if (!amount) {
+        alert("Please enter an amount.");
+        return;
+      }
+
+      db.movements.push({
+        id: uid(),
+        date: $("manualDate").value || today(),
+        type: $("manualType").value === "in" ? "Manual money in" : "Manual money out",
+        description: $("manualDescription").value.trim() || "Manual movement",
+        amount: $("manualType").value === "in" ? Math.abs(amount) : -Math.abs(amount),
+        manual: true
+      });
+
+      saveDb();
+      $("manualMovementForm").reset();
+      $("manualDate").value = today();
+      $("manualAmount").value = 0;
+    }
+
+    function deleteMovement(id) {
+      if (!confirm("Delete this manual movement?")) return;
+      db.movements = db.movements.filter(movement => movement.id !== id);
+      saveDb();
+    }
+
+
+
+    function greeting() {
+      const hour = new Date().getHours();
+      if (hour < 12) return "Good morning, Romario";
+      if (hour < 18) return "Good afternoon, Romario";
+      return "Good evening, Romario";
+    }
+
+    function setPinMessage(message = "", error = false) {
+      const box = $("pinMessage");
+      if (!box) return;
+      box.textContent = message;
+      box.classList.toggle("error", error);
+    }
+
+    function updatePinDots() {
+      document.querySelectorAll(".pin-dot").forEach((dot, index) => {
+        dot.classList.toggle("filled", index < pinInput.length);
+      });
+    }
+
+    function refreshPinText() {
+      if (!$("pinTitle")) return;
+      $("pinTitle").textContent = greeting();
+      $("pinSubtitle").textContent = "Enter your passcode to open your reselling business manager.";
+      setPinMessage("");
+    }
+
+    function clearPin() {
+      pinInput = "";
+      updatePinDots();
+    }
+
+    async function pressPin(number) {
+      if (pinInput.length >= 6) return;
+      pinInput += number;
+      updatePinDots();
+
+      if (pinInput.length === 6) {
+        await submitPin();
+      }
+    }
+
+    function deletePin() {
+      pinInput = pinInput.slice(0, -1);
+      updatePinDots();
+      setPinMessage("");
+    }
+
+    function hasLocalBusinessData() {
+      return (
+        (db.items && db.items.length > 0) ||
+        (db.expenses && db.expenses.length > 0) ||
+        (db.movements && db.movements.length > 0) ||
+        Number(db.settings?.startingCapital || 0) !== 0
+      );
+    }
+
+    async function downloadCloudDataIfLocalEmpty() {
+      if (!supabaseClient) return;
+
+      const user = await getSupabaseUser();
+      if (!user) return;
+
+      const { data, error } = await supabaseClient
+        .from("reselling_business_data")
+        .select("data, updated_at")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!error && data && data.data) {
+        db = normaliseDb(data.data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+        if ($("startingCapital")) $("startingCapital").value = db.settings.startingCapital || 0;
+        renderAll();
+        return;
+      }
+
+      if (hasLocalBusinessData()) {
+        await autoUploadToSupabase();
+      }
+    }
+
+    async function submitPin() {
+      initSupabaseClient(false);
+
+      if (!supabaseClient) {
+        clearPin();
+        setPinMessage("Supabase is not ready. Try again in a moment.", true);
+        return;
+      }
+
+      setPinMessage("Checking passcode...");
+
+      const { error } = await supabaseClient.auth.signInWithPassword({
+        email: OWNER_SUPABASE_EMAIL,
+        password: pinInput
+      });
+
+      if (error) {
+        clearPin();
+        setPinMessage("Wrong passcode. Try again.", true);
+        return;
+      }
+
+      unlockFromPin();
+      await downloadCloudDataIfLocalEmpty();
+    }
+
+    function unlockFromPin() {
+      sessionStorage.setItem("resellingBusinessPinUnlocked", "true");
+      document.body.classList.remove("locked");
+      clearPin();
+      setPinMessage("");
+      initSupabaseClient(false);
+    }
+
+    function forgotPin() {
+      setPinMessage("Reset your passcode in Supabase Auth by changing this user's password.", true);
+    }
+
+    async function useFaceId() {
+      setPinMessage("Face ID is not connected yet. Use your passcode.", true);
+    }
+
+    async function setupPinLock() {
+      refreshPinText();
+      initSupabaseClient(false);
+
+      if (sessionStorage.getItem("resellingBusinessPinUnlocked") === "true") {
+        const user = await getSupabaseUser();
+        if (user) {
+          document.body.classList.remove("locked");
+          return;
+        }
+      }
+
+      document.body.classList.add("locked");
+      sessionStorage.removeItem("resellingBusinessPinUnlocked");
+    }
+
+    function getSupabaseSettings() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(SUPABASE_SETTINGS_KEY)) || {};
+        return {
+          url: saved.url || BACKGROUND_SUPABASE_URL,
+          anonKey: saved.anonKey || BACKGROUND_SUPABASE_ANON_KEY,
+          email: saved.email || ""
+        };
+      } catch {
+        return {
+          url: BACKGROUND_SUPABASE_URL,
+          anonKey: BACKGROUND_SUPABASE_ANON_KEY,
+          email: ""
+        };
+      }
+    }
+
+    function scheduleAutoSync() {
+      clearTimeout(autoSyncTimer);
+
+      autoSyncTimer = setTimeout(async () => {
+        await autoUploadToSupabase();
+      }, 1200);
+    }
+
+    async function autoUploadToSupabase() {
+      if (!supabaseClient) {
+        initSupabaseClient(false);
+        if (!supabaseClient) {
+          lastAutoSyncMessage = "Auto-sync waiting for Supabase settings.";
+          return;
+        }
+      }
+
+      const user = await getSupabaseUser();
+      if (!user) {
+        lastAutoSyncMessage = "Auto-sync waiting for login.";
+        return;
+      }
+
+      const payload = {
+        user_id: user.id,
+        data: db,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabaseClient
+        .from("reselling_business_data")
+        .upsert(payload, { onConflict: "user_id" });
+
+      if (error) {
+        lastAutoSyncMessage = "Auto-sync failed: " + error.message;
+        setSupabaseStatus(lastAutoSyncMessage, "error");
+        return;
+      }
+
+      const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      lastAutoSyncMessage = "Auto-synced at " + time;
+      setSupabaseStatus(lastAutoSyncMessage, "success");
+    }
+
+    function setSupabaseStatus(message, type = "normal") {
+      const box = $("supabaseStatus");
+      if (!box) return;
+      const cls = type === "error" ? "bad" : type === "success" ? "good" : "";
+      box.innerHTML = `<div class="line"><span>Status</span><strong class="${cls}">${escapeHtml(message)}</strong></div>`;
+    }
+
+    function fillSupabaseSettings() {
+      const settings = getSupabaseSettings();
+      if ($("supabaseUrl")) $("supabaseUrl").value = settings.url || "";
+      if ($("supabaseAnonKey")) $("supabaseAnonKey").value = settings.anonKey || "";
+      if ($("supabaseEmail")) $("supabaseEmail").value = settings.email || "";
+      if ($("supabaseSqlBox")) $("supabaseSqlBox").textContent = SUPABASE_SQL;
+      initSupabaseClient(false);
+      if ($("supabaseStatus")) setSupabaseStatus(lastAutoSyncMessage);
+    }
+
+    function saveSupabaseSettings() {
+      const current = getSupabaseSettings();
+      const settings = {
+        url: $("supabaseUrl") ? $("supabaseUrl").value.trim() : current.url,
+        anonKey: $("supabaseAnonKey") ? $("supabaseAnonKey").value.trim() : current.anonKey,
+        email: $("supabaseEmail") ? $("supabaseEmail").value.trim() : current.email
+      };
+
+      localStorage.setItem(SUPABASE_SETTINGS_KEY, JSON.stringify(settings));
+      initSupabaseClient(true);
+    }
+
+    function initSupabaseClient(showMessage = false) {
+      const settings = getSupabaseSettings();
+
+      if (!settings.url || !settings.anonKey) {
+        supabaseClient = null;
+        if (showMessage) setSupabaseStatus("Supabase settings saved, but URL or anon key is missing.", "error");
+        return;
+      }
+
+      if (!window.supabase) {
+        supabaseClient = null;
+        setSupabaseStatus("Supabase library could not load. Check your internet connection.", "error");
+        return;
+      }
+
+      try {
+        supabaseClient = window.supabase.createClient(settings.url, settings.anonKey);
+        if (showMessage) setSupabaseStatus("Supabase settings saved.", "success");
+      } catch (error) {
+        supabaseClient = null;
+        setSupabaseStatus("Could not create Supabase connection.", "error");
+      }
+    }
+
+    async function getSupabaseUser() {
+      if (!supabaseClient) return null;
+      const { data, error } = await supabaseClient.auth.getUser();
+      if (error) return null;
+      return data.user;
+    }
+
+    async function supabaseSignUp() {
+      saveSupabaseSettings();
+      if (!supabaseClient) return setSupabaseStatus("Add your Supabase URL and anon key first.", "error");
+
+      const email = $("supabaseEmail") ? $("supabaseEmail").value.trim() : "";
+      const password = $("supabasePassword") ? $("supabasePassword").value : "";
+
+      if (!email || !password) {
+        return setSupabaseStatus("Enter an email and password first.", "error");
+      }
+
+      const { error } = await supabaseClient.auth.signUp({ email, password });
+
+      if (error) {
+        setSupabaseStatus(error.message, "error");
+        return;
+      }
+
+      setSupabaseStatus("Account created. If Supabase asks for email confirmation, confirm your email before logging in.", "success");
+    }
+
+    async function supabaseLogin() {
+      saveSupabaseSettings();
+      if (!supabaseClient) return setSupabaseStatus("Add your Supabase URL and anon key first.", "error");
+
+      const email = $("supabaseEmail") ? $("supabaseEmail").value.trim() : "";
+      const password = $("supabasePassword") ? $("supabasePassword").value : "";
+
+      if (!email || !password) {
+        return setSupabaseStatus("Enter an email and password first.", "error");
+      }
+
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        setSupabaseStatus(error.message, "error");
+        return;
+      }
+
+      setSupabaseStatus("Logged in to Supabase. Auto-sync is now on.", "success");
+      await autoUploadToSupabase();
+    }
+
+    async function supabaseLogout() {
+      if (!supabaseClient) return;
+      await supabaseClient.auth.signOut();
+      setSupabaseStatus("Logged out.", "success");
+    }
+
+    async function uploadToSupabase() {
+      if (!supabaseClient) {
+        initSupabaseClient();
+        if (!supabaseClient) return setSupabaseStatus("Set up Supabase first.", "error");
+      }
+
+      const user = await getSupabaseUser();
+      if (!user) return setSupabaseStatus("Log in before uploading data.", "error");
+
+      const payload = {
+        user_id: user.id,
+        data: db,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabaseClient
+        .from("reselling_business_data")
+        .upsert(payload, { onConflict: "user_id" });
+
+      if (error) {
+        setSupabaseStatus(error.message, "error");
+        return;
+      }
+
+      const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      lastAutoSyncMessage = "Uploaded manually at " + time;
+      setSupabaseStatus(lastAutoSyncMessage, "success");
+    }
+
+    async function downloadFromSupabase() {
+      if (!supabaseClient) {
+        initSupabaseClient();
+        if (!supabaseClient) return setSupabaseStatus("Set up Supabase first.", "error");
+      }
+
+      const user = await getSupabaseUser();
+      if (!user) return setSupabaseStatus("Log in before downloading data.", "error");
+
+      const { data, error } = await supabaseClient
+        .from("reselling_business_data")
+        .select("data, updated_at")
+        .eq("user_id", user.id)
+        .single();
+
+      if (error) {
+        setSupabaseStatus(error.message, "error");
+        return;
+      }
+
+      if (!data || !data.data) {
+        setSupabaseStatus("No cloud data found yet.", "error");
+        return;
+      }
+
+      if (!confirm("This will replace the local data in this browser with your Supabase data. Continue?")) {
+        return;
+      }
+
+      db = normaliseDb(data.data);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+      $("startingCapital").value = db.settings.startingCapital || 0;
+      fillSupabaseSettings();
+      renderAll();
+      lastAutoSyncMessage = "Downloaded data from Supabase.";
+      setSupabaseStatus(lastAutoSyncMessage, "success");
+    }
+
+    function copySupabaseSql() {
+      navigator.clipboard?.writeText(SUPABASE_SQL);
+      alert("SQL copied.");
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderBoughtItems();
+      renderStock();
+      renderSold();
+      renderExpenses();
+      renderMoney();
+      renderReports();
+      renderLiveTotals();
+    }
+
+    function init() {
+      renderNav();
+
+      $("dateBought").value = today();
+      $("dateSold").value = today();
+      $("lossDate").value = today();
+      $("expenseDate").value = today();
+      $("manualDate").value = today();
+      $("startingCapital").value = db.settings.startingCapital || 0;
+      fillSupabaseSettings();
+      setupPinLock();
+
+      $("itemForm").addEventListener("submit", saveItem);
+      $("soldForm").addEventListener("submit", saveSale);
+      $("lossForm").addEventListener("submit", saveLoss);
+      $("expenseForm").addEventListener("submit", saveExpense);
+      $("capitalForm").addEventListener("submit", saveCapital);
+      $("manualMovementForm").addEventListener("submit", saveManualMovement);
+
+      ["purchasePrice", "extraCosts", "expectedSellingPrice"].forEach(id => {
+        $(id).addEventListener("input", renderLiveTotals);
+      });
+
+      ["salePrice", "sellingFees"].forEach(id => {
+        $(id).addEventListener("input", renderSoldLiveTotals);
+      });
+
+      $("moneyRecovered").addEventListener("input", renderLossLiveTotals);
+
+      renderAll();
+    }
+
+    init();
+  </script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+      });
+    }
+  </script>
+
+</body>
+</html>
